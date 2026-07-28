@@ -1,0 +1,7 @@
+{
+  "name": "Meteo Romania (ANM)",
+  "homeassistant": "2024.1.0",
+  "render_readme": true,
+  "country": ["RO"],
+  "zip_release": false
+}

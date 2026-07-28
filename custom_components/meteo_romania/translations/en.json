@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Meteo Romania (ANM)",
+        "description": "Configure the Meteo Romania integration. Select the nearest weather station.",
+        "data": {
+          "city": "City / Weather Station",
+          "forecast_city": "Forecast city (optional)",
+          "update_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "city": "Select the ANM station. 161 stations are available across Romania.",
+          "update_interval": "Minimum update interval. Default: 1800 (30 minutes). Minimum: 300 (5 minutes)."
+        }
+      }
+    },
+    "error": {
+      "station_not_found": "Weather station not found in API."
+    }
+  }
+}

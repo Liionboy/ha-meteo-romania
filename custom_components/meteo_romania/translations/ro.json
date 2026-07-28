@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Meteo Romania (ANM)",
+        "description": "Configurează integrarea Meteo România. Selectează stația meteo cea mai apropiată de tine.",
+        "data": {
+          "city": "Oraș / Stație meteo",
+          "forecast_city": "Oraș prognoză (opțional)",
+          "update_interval": "Interval actualizare (secunde)"
+        },
+        "data_description": {
+          "city": "Selectează stația ANM. Sunt disponibile 161 de stații din toată România.",
+          "update_interval": "Intervalul minim de actualizare. Implicit: 1800 (30 minute). Minim: 300 (5 minute)."
+        }
+      }
+    },
+    "error": {
+      "station_not_found": "Stația meteo nu a fost găsită în API."
+    }
+  }
+}
