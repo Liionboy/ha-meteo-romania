@@ -2,21 +2,46 @@
   "config": {
     "step": {
       "user": {
-        "title": "Meteo Romania (ANM)",
-        "description": "Configurează integrarea Meteo România. Selectează stația meteo cea mai apropiată de tine.",
+        "title": "Meteo Romania",
+        "description": "Alege modul de configurare:",
         "data": {
-          "city": "Oraș / Stație meteo",
-          "forecast_city": "Oraș prognoză (opțional)",
+          "mode": "Mod de funcționare"
+        }
+      },
+      "anm_station": {
+        "title": "Stație ANM",
+        "description": "Selectează stația meteo ANM din cele 161 disponibile în România.",
+        "data": {
+          "city": "Stație meteo",
           "update_interval": "Interval actualizare (secunde)"
-        },
-        "data_description": {
-          "city": "Selectează stația ANM. Sunt disponibile 161 de stații din toată România.",
-          "update_interval": "Intervalul minim de actualizare. Implicit: 1800 (30 minute). Minim: 300 (5 minute)."
+        }
+      },
+      "custom_location": {
+        "title": "Locație personalizată",
+        "description": "Introdu codul poștal sau numele localității pentru a căuta coordonatele GPS. Vei primi date precise de la OpenMeteo + avertizări ANM.",
+        "data": {
+          "postal_code": "Cod poștal sau nume localitate"
+        }
+      },
+      "select_location": {
+        "title": "Selectează locația",
+        "description": "Am găsit mai multe locații. Selectează-o pe cea corectă:",
+        "data": {
+          "location": "Locație"
+        }
+      },
+      "confirm_location": {
+        "title": "Confirmă locația",
+        "description": "Locația selectată:\n{location_info}\n\nSetează intervalul de actualizare:",
+        "data": {
+          "update_interval": "Interval actualizare (secunde)"
         }
       }
     },
     "error": {
-      "station_not_found": "Stația meteo nu a fost găsită în API."
+      "station_not_found": "Stația meteo nu a fost găsită în API.",
+      "no_query": "Introdu un cod poștal sau nume localitate.",
+      "location_not_found": "Nu am găsit nicio locație pentru căutarea ta. Încearcă alt cod poștal sau nume."
     }
   }
 }

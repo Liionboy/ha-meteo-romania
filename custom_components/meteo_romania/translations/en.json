@@ -2,21 +2,46 @@
   "config": {
     "step": {
       "user": {
-        "title": "Meteo Romania (ANM)",
-        "description": "Configure the Meteo Romania integration. Select the nearest weather station.",
+        "title": "Meteo Romania",
+        "description": "Choose configuration mode:",
         "data": {
-          "city": "City / Weather Station",
-          "forecast_city": "Forecast city (optional)",
+          "mode": "Operating mode"
+        }
+      },
+      "anm_station": {
+        "title": "ANM Station",
+        "description": "Select the ANM weather station from 161 available across Romania.",
+        "data": {
+          "city": "Weather station",
           "update_interval": "Update interval (seconds)"
-        },
-        "data_description": {
-          "city": "Select the ANM station. 161 stations are available across Romania.",
-          "update_interval": "Minimum update interval. Default: 1800 (30 minutes). Minimum: 300 (5 minutes)."
+        }
+      },
+      "custom_location": {
+        "title": "Custom Location",
+        "description": "Enter a postal code or location name to search for GPS coordinates. You'll get precise data from OpenMeteo + ANM warnings.",
+        "data": {
+          "postal_code": "Postal code or location name"
+        }
+      },
+      "select_location": {
+        "title": "Select Location",
+        "description": "Multiple locations found. Select the correct one:",
+        "data": {
+          "location": "Location"
+        }
+      },
+      "confirm_location": {
+        "title": "Confirm Location",
+        "description": "Selected location:\n{location_info}\n\nSet update interval:",
+        "data": {
+          "update_interval": "Update interval (seconds)"
         }
       }
     },
     "error": {
-      "station_not_found": "Weather station not found in API."
+      "station_not_found": "Weather station not found in API.",
+      "no_query": "Enter a postal code or location name.",
+      "location_not_found": "No location found for your search. Try a different postal code or name."
     }
   }
 }

@@ -9,29 +9,96 @@ DOMAIN = "meteo_romania"
 PLATFORMS = ["sensor", "weather", "binary_sensor"]
 LOGGER = logging.getLogger(__package__)
 
-# API
+# ========== ANM API ==========
 API_BASE_URL = "https://www.meteoromania.ro/wp-json/meteoapi/v2"
 API_STAREA_VREMII = f"{API_BASE_URL}/starea-vremii"
 API_PROGNOZA_ORASE = f"{API_BASE_URL}/prognoza-orase"
 API_AVERTIZARI_GENERALE = f"{API_BASE_URL}/avertizari-generale"
 API_AVERTIZARI_NOWCASTING = f"{API_BASE_URL}/avertizari-nowcasting"
 
-# Config entry keys
+# ========== OpenMeteo API (free, no key) ==========
+OPENMETEO_BASE_URL = "https://api.open-meteo.com/v1/forecast"
+OPENMETEO_PARAMS_CURRENT = (
+    "temperature_2m,relative_humidity_2m,apparent_temperature,"
+    "wind_speed_10m,wind_direction_10m,wind_gusts_10m,"
+    "surface_pressure,weather_code,cloud_cover,precipitation"
+)
+OPENMETEO_PARAMS_DAILY = (
+    "weather_code,temperature_2m_max,temperature_2m_min,"
+    "precipitation_sum,precipitation_probability_max,"
+    "wind_speed_10m_max,wind_gusts_10m_max"
+)
+
+# ========== Geocoding (Nominatim - free) ==========
+NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org/search"
+NOMINATIM_HEADERS = {"User-Agent": "ha-meteo-romania/1.0"}
+
+# ========== Config entry keys ==========
 CONF_CITY = "city"
 CONF_FORECAST_CITY = "forecast_city"
 CONF_UPDATE_INTERVAL = "update_interval"
+CONF_MODE = "mode"
+CONF_LATITUDE = "latitude"
+CONF_LONGITUDE = "longitude"
+CONF_LOCATION_NAME = "location_name"
+CONF_POSTAL_CODE = "postal_code"
 
-# Defaults
+# ========== Modes ==========
+MODE_ANM_STATION = "anm_station"
+MODE_CUSTOM_LOCATION = "custom_location"
+
+# ========== Defaults ==========
 DEFAULT_UPDATE_INTERVAL = 1800  # 30 minutes
 DEFAULT_FORECAST_CITY = "Bucuresti"
 
-# Update intervals
+# ========== Update intervals ==========
 UPDATE_INTERVAL_STAREA_VREMII = timedelta(minutes=30)
 UPDATE_INTERVAL_PROGNOZA = timedelta(hours=3)
 UPDATE_INTERVAL_AVERTIZARI = timedelta(minutes=15)
+UPDATE_INTERVAL_OPENMETEO = timedelta(minutes=30)
 
-# Icon mapping from ANM icon codes to HA weather conditions
-# ANM icons: 2=clear, 3=partly cloudy, 5=overcast, 29=invisible, 84=unavailable
+# ========== WMO Weather Codes (OpenMeteo) ==========
+# https://open-meteo.com/en/docs
+WMO_WEATHER_CODE_MAP = {
+    0: "sunny",             # Clear sky
+    1: "sunny",             # Mainly clear
+    2: "partlycloudy",      # Partly cloudy
+    3: "cloudy",            # Overcast
+    45: "fog",              # Fog
+    48: "fog",              # Depositing rime fog
+    51: "rainy",            # Light drizzle
+    53: "rainy",            # Moderate drizzle
+    55: "rainy",            # Dense drizzle
+    56: "rainy",            # Light freezing drizzle
+    57: "rainy",            # Dense freezing drizzle
+    61: "rainy",            # Slight rain
+    63: "rainy",            # Moderate rain
+    65: "pouring",          # Heavy rain
+    66: "rainy",            # Light freezing rain
+    67: "pouring",          # Heavy freezing rain
+    71: "snowy",            # Slight snow
+    73: "snowy",            # Moderate snow
+    75: "snowy",            # Heavy snow
+    77: "snowy",            # Snow grains
+    80: "rainy",            # Slight rain showers
+    81: "rainy",            # Moderate rain showers
+    82: "pouring",          # Violent rain showers
+    85: "snowy",            # Slight snow showers
+    86: "snowy",            # Heavy snow showers
+    95: "lightning",        # Thunderstorm
+    96: "lightning-rainy",  # Thunderstorm with slight hail
+    99: "lightning-rainy",  # Thunderstorm with heavy hail
+}
+
+# WMO codes for night (sunny -> clear-night)
+WMO_NIGHT_CODE_MAP = {
+    0: "clear-night",
+    1: "clear-night",
+    2: "partlycloudy",
+    3: "cloudy",
+}
+
+# ========== ANM Icon mapping ==========
 ANM_ICON_MAP = {
     "1": "sunny",
     "2": "sunny",
@@ -160,22 +227,10 @@ NEBULOZITATE_MAP = {
 
 # Wind direction mapping
 WIND_DIRECTION_MAP = {
-    "N": 0,
-    "NNE": 22,
-    "NE": 45,
-    "ENE": 67,
-    "E": 90,
-    "ESE": 112,
-    "SE": 135,
-    "SSE": 157,
-    "S": 180,
-    "SSV": 202,
-    "SV": 225,
-    "VSV": 247,
-    "V": 270,
-    "VNV": 292,
-    "NV": 315,
-    "NNV": 337,
+    "N": 0, "NNE": 22, "NE": 45, "ENE": 67,
+    "E": 90, "ESE": 112, "SE": 135, "SSE": 157,
+    "S": 180, "SSV": 202, "SV": 225, "VSV": 247,
+    "V": 270, "VNV": 292, "NV": 315, "NNV": 337,
 }
 
 # Avertizare color codes
@@ -187,90 +242,76 @@ AVERTIZARE_COLORS = {
 
 # Forecast city mapping (prognoza-orase only has 10 cities)
 FORECAST_CITIES = [
-    "Arad",
-    "Botosani",
-    "Bucuresti",
-    "Cluj-Napoca",
-    "Constanta",
-    "Craiova",
-    "Iasi",
-    "Rm. Valcea",
-    "Sibiu",
-    "Sulina",
+    "Arad", "Botosani", "Bucuresti", "Cluj-Napoca", "Constanta",
+    "Craiova", "Iasi", "Rm. Valcea", "Sibiu", "Sulina",
 ]
 
 # Nearest forecast city fallback mapping
-# Maps main city names to nearest forecast city
 NEAREST_FORECAST_CITY: dict[str, str] = {
-    # Argeș region -> București / Rm. Vâlcea
-    "PITESTI": "Bucuresti",
-    "CAMPULUNG MUSCEL": "Bucuresti",
-    "CURTEA DE ARGES": "Bucuresti",
-    "TARGOVISTE": "Bucuresti",
-    "CAMPINA": "Bucuresti",
-    "PLOIESTI": "Bucuresti",
-    "BUCURESTI AFUMATI": "Bucuresti",
-    "BUCURESTI BANEASA": "Bucuresti",
+    # Argeș region
+    "PITESTI": "Bucuresti", "CAMPULUNG MUSCEL": "Bucuresti",
+    "CURTEA DE ARGES": "Bucuresti", "TARGOVISTE": "Bucuresti",
+    "CAMPINA": "Bucuresti", "PLOIESTI": "Bucuresti",
+    "BUCURESTI AFUMATI": "Bucuresti", "BUCURESTI BANEASA": "Bucuresti",
     "BUCURESTI FILARET": "Bucuresti",
-    # Oltenia -> Craiova / Rm. Vâlcea
-    "CRAIOVA": "Craiova",
-    "RAMNICU VALCEA": "Rm. Valcea",
-    "DRAGASANI": "Rm. Valcea",
-    "SLATINA": "Craiova",
-    "CARACAL": "Craiova",
-    "TARGU JIU": "Craiova",
-    "DROBETA TURNU SEVERIN": "Craiova",
-    "BAILESTI": "Craiova",
-    # Transilvania -> Cluj / Sibiu
-    "CLUJ-NAPOCA": "Cluj-Napoca",
-    "SIBIU": "Sibiu",
-    "ALBA IULIA": "Sibiu",
-    "BRASOV GHIMBAV": "Sibiu",
-    "TARGU MURES": "Cluj-Napoca",
-    "DEVA": "Sibiu",
-    "HUNEDOARA": "Sibiu",
-    "SEBES (ALBA)": "Sibiu",
-    "BLAJ": "Sibiu",
-    "MIERCUREA CIUC": "Cluj-Napoca",
+    # Oltenia
+    "CRAIOVA": "Craiova", "RAMNICU VALCEA": "Rm. Valcea",
+    "DRAGASANI": "Rm. Valcea", "SLATINA": "Craiova",
+    "CARACAL": "Craiova", "TARGU JIU": "Craiova",
+    "DROBETA TURNU SEVERIN": "Craiova", "BAILESTI": "Craiova",
+    # Transilvania
+    "CLUJ-NAPOCA": "Cluj-Napoca", "SIBIU": "Sibiu",
+    "ALBA IULIA": "Sibiu", "BRASOV GHIMBAV": "Sibiu",
+    "TARGU MURES": "Cluj-Napoca", "DEVA": "Sibiu",
+    "HUNEDOARA": "Sibiu", "SEBES (ALBA)": "Sibiu",
+    "BLAJ": "Sibiu", "MIERCUREA CIUC": "Cluj-Napoca",
     "ODORHEIUL SECUIESC": "Cluj-Napoca",
     "SFANTU GHEORGHE (MUNTE)": "Cluj-Napoca",
-    # Moldova -> Iași / Botoșani
-    "IASI": "Iasi",
-    "BOTOSANI": "Botosani",
-    "BACAU": "Iasi",
-    "GALATI": "Iasi",
-    "BRAILA": "Iasi",
-    "FOCSANI": "Iasi",
-    "VASLUI": "Iasi",
-    "SUCEAVA": "Botosani",
-    "PIATRA NEAMT": "Iasi",
-    "ROMAN": "Iasi",
-    "ADJUD": "Iasi",
-    "BARLAD": "Iasi",
-    "TECUCI": "Iasi",
-    "BUZAU": "Bucuresti",
-    "RAMNICU SARAT": "Bucuresti",
-    # Banat -> Arad / Timișoara
-    "ARAD": "Arad",
-    "TIMISOARA": "Arad",
-    "RESITA": "Arad",
-    "CARANSEBES": "Arad",
-    "LUGOJ": "Arad",
-    # Dobrogea -> Constanța / Sulina
-    "CONSTANTA": "Constanta",
-    "CONSTANTA - dig": "Constanta",
-    "MANGALIA": "Constanta",
-    "TULCEA": "Sulina",
-    "MEDGIDIA": "Constanta",
-    "SULINA": "Sulina",
-    # Maramureș -> Cluj
-    "BAIA MARE": "Cluj-Napoca",
-    "SIGHETUL MARMATIEI": "Cluj-Napoca",
+    # Moldova
+    "IASI": "Iasi", "BOTOSANI": "Botosani", "BACAU": "Iasi",
+    "GALATI": "Iasi", "BRAILA": "Iasi", "FOCSANI": "Iasi",
+    "VASLUI": "Iasi", "SUCEAVA": "Botosani", "PIATRA NEAMT": "Iasi",
+    "ROMAN": "Iasi", "ADJUD": "Iasi", "BARLAD": "Iasi",
+    "TECUCI": "Iasi", "BUZAU": "Bucuresti", "RAMNICU SARAT": "Bucuresti",
+    # Banat
+    "ARAD": "Arad", "TIMISOARA": "Arad", "RESITA": "Arad",
+    "CARANSEBES": "Arad", "LUGOJ": "Arad",
+    # Dobrogea
+    "CONSTANTA": "Constanta", "CONSTANTA - dig": "Constanta",
+    "MANGALIA": "Constanta", "TULCEA": "Sulina",
+    "MEDGIDIA": "Constanta", "SULINA": "Sulina",
+    # Maramureș
+    "BAIA MARE": "Cluj-Napoca", "SIGHETUL MARMATIEI": "Cluj-Napoca",
     "SATU MARE": "Cluj-Napoca",
-    # Oradea -> Arad
-    "ORADEA": "Arad",
-    "BIHOR": "Arad",
-    # Bucovina -> Botoșani
+    # Bihor
+    "ORADEA": "Arad", "BIHOR": "Arad",
+    # Bucovina
     "RADAUTI": "Botosani",
-    "SUCEAVA": "Botosani",
+}
+
+# Romanian counties for ANM warnings
+ROMANIAN_COUNTIES = [
+    "AB", "AR", "AG", "BC", "BH", "BN", "BT", "BV", "BR", "B",
+    "BZ", "CS", "CL", "CJ", "CT", "CV", "DB", "DJ", "GL", "GR",
+    "GJ", "HR", "HD", "IL", "IS", "IF", "MM", "MH", "MS", "NT",
+    "OT", "PH", "SM", "SJ", "SB", "SV", "TR", "TM", "TL", "VS",
+    "VL", "VN",
+]
+
+# County code to name mapping
+COUNTY_NAMES = {
+    "AB": "Alba", "AR": "Arad", "AG": "Argeș", "BC": "Bacău",
+    "BH": "Bihor", "BN": "Bistrița-Năsăud", "BT": "Botoșani",
+    "BV": "Brașov", "BR": "Brăila", "B": "București",
+    "BZ": "Buzău", "CS": "Caraș-Severin", "CL": "Călărași",
+    "CJ": "Cluj", "CT": "Constanța", "CV": "Covasna",
+    "DB": "Dâmbovița", "DJ": "Dolj", "GL": "Galați",
+    "GR": "Giurgiu", "GJ": "Gorj", "HR": "Harghita",
+    "HD": "Hunedoara", "IL": "Ialomița", "IS": "Iași",
+    "IF": "Ilfov", "MM": "Maramureș", "MH": "Mehedinți",
+    "MS": "Mureș", "NT": "Neamț", "OT": "Olt", "PH": "Prahova",
+    "SM": "Satu Mare", "SJ": "Sălaj", "SB": "Sibiu",
+    "SV": "Suceava", "TR": "Teleorman", "TM": "Timiș",
+    "TL": "Tulcea", "VS": "Vaslui", "VL": "Vâlcea",
+    "VN": "Vrancea",
 }
