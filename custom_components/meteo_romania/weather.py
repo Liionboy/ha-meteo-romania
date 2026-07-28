@@ -66,7 +66,6 @@ async def async_setup_entry(
 class AnmWeather(CoordinatorEntity[AnmStareaVremiiCoordinator], WeatherEntity):
     """Weather entity using ANM data."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
@@ -178,7 +177,6 @@ class AnmWeather(CoordinatorEntity[AnmStareaVremiiCoordinator], WeatherEntity):
 class OpenMeteoWeather(CoordinatorEntity[OpenMeteoCoordinator], WeatherEntity):
     """Weather entity using OpenMeteo data."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS

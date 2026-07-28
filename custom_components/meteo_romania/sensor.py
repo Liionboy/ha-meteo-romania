@@ -49,66 +49,58 @@ class AnmSensorEntityDescription(SensorEntityDescription):
 
 ANM_SENSOR_TYPES: tuple[AnmSensorEntityDescription, ...] = (
     AnmSensorEntityDescription(
-        key="temperature",
-        translation_key="temperature",
+        key="temperatura",
+        name="Temperatura",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.temperature,
     ),
     AnmSensorEntityDescription(
-        key="humidity",
-        translation_key="humidity",
+        key="umiditate",
+        name="Umiditate",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.humidity,
     ),
     AnmSensorEntityDescription(
-        key="wind_speed",
-        translation_key="wind_speed",
+        key="viteza_vant",
+        name="Viteza Vânt",
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.wind_speed,
     ),
     AnmSensorEntityDescription(
-        key="wind_direction",
-        translation_key="wind_direction",
+        key="directie_vant",
+        name="Direcție Vânt",
         icon="mdi:weather-windy",
         value_fn=lambda d: d.wind_direction,
     ),
     AnmSensorEntityDescription(
-        key="wind_bearing",
-        translation_key="wind_bearing",
-        native_unit_of_measurement="°",
-        icon="mdi:compass-rose",
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda d: WIND_DIRECTION_MAP.get(d.wind_direction) if d.wind_direction else None,
-    ),
-    AnmSensorEntityDescription(
-        key="pressure",
-        translation_key="pressure",
+        key="presiune",
+        name="Presiune",
         native_unit_of_measurement=UnitOfPressure.MBAR,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.pressure,
     ),
     AnmSensorEntityDescription(
-        key="pressure_trend",
-        translation_key="pressure_trend",
+        key="trend_presiune",
+        name="Trend Presiune",
         icon="mdi:gauge",
         value_fn=lambda d: d.pressure_trend,
     ),
     AnmSensorEntityDescription(
-        key="cloudiness",
-        translation_key="cloudiness",
+        key="cer",
+        name="Cer",
         icon="mdi:weather-cloudy",
         value_fn=lambda d: d.cloudiness,
     ),
     AnmSensorEntityDescription(
-        key="condition",
-        translation_key="condition",
+        key="conditie",
+        name="Condiție",
         icon="mdi:weather-partly-cloudy",
         value_fn=lambda d: d.condition,
     ),
@@ -127,92 +119,92 @@ class OpenMeteoSensorEntityDescription(SensorEntityDescription):
 
 OPENMETEO_SENSOR_TYPES: tuple[OpenMeteoSensorEntityDescription, ...] = (
     OpenMeteoSensorEntityDescription(
-        key="temperature",
-        translation_key="temperature",
+        key="temperatura",
+        name="Temperatura",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.temperature,
     ),
     OpenMeteoSensorEntityDescription(
-        key="apparent_temperature",
-        translation_key="apparent_temperature",
+        key="temperatura_perceputa",
+        name="Temperatura Percepută",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.apparent_temperature,
     ),
     OpenMeteoSensorEntityDescription(
-        key="humidity",
-        translation_key="humidity",
+        key="umiditate",
+        name="Umiditate",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.humidity,
     ),
     OpenMeteoSensorEntityDescription(
-        key="wind_speed",
-        translation_key="wind_speed",
+        key="viteza_vant",
+        name="Viteza Vânt",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.wind_speed,
     ),
     OpenMeteoSensorEntityDescription(
-        key="wind_direction",
-        translation_key="wind_direction",
+        key="directie_vant",
+        name="Direcție Vânt",
         native_unit_of_measurement="°",
         icon="mdi:compass-rose",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.wind_direction,
     ),
     OpenMeteoSensorEntityDescription(
-        key="wind_direction_text",
-        translation_key="wind_direction_text",
+        key="directie_vant_text",
+        name="Direcție Vânt Text",
         icon="mdi:weather-windy",
         value_fn=lambda d: d.wind_direction_text,
     ),
     OpenMeteoSensorEntityDescription(
-        key="wind_gusts",
-        translation_key="wind_gusts",
+        key="rafale",
+        name="Rafale",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.wind_gusts,
     ),
     OpenMeteoSensorEntityDescription(
-        key="pressure",
-        translation_key="pressure",
+        key="presiune",
+        name="Presiune",
         native_unit_of_measurement=UnitOfPressure.HPA,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.pressure,
     ),
     OpenMeteoSensorEntityDescription(
-        key="cloud_cover",
-        translation_key="cloud_cover",
+        key="acoperire_nori",
+        name="Acoperire Nori",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:weather-cloudy",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.cloud_cover,
     ),
     OpenMeteoSensorEntityDescription(
-        key="precipitation",
-        translation_key="precipitation",
+        key="precipitatii",
+        name="Precipitații",
         native_unit_of_measurement="mm",
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda d: d.precipitation,
     ),
     OpenMeteoSensorEntityDescription(
-        key="condition",
-        translation_key="condition",
+        key="conditie",
+        name="Condiție",
         icon="mdi:weather-partly-cloudy",
         value_fn=lambda d: d.condition,
     ),
     OpenMeteoSensorEntityDescription(
-        key="weather_code",
-        translation_key="weather_code",
+        key="cod_meteo",
+        name="Cod Meteo",
         icon="mdi:code-brackets",
         value_fn=lambda d: d.weather_code,
     ),
@@ -259,7 +251,6 @@ async def async_setup_entry(
 class AnmSensor(CoordinatorEntity[AnmStareaVremiiCoordinator], SensorEntity):
     """Representation of an ANM sensor."""
 
-    _attr_has_entity_name = True
     entity_description: AnmSensorEntityDescription
 
     def __init__(
@@ -273,6 +264,7 @@ class AnmSensor(CoordinatorEntity[AnmStareaVremiiCoordinator], SensorEntity):
         self.entity_description = description
         self._city = city
         self._attr_unique_id = f"{entry.entry_id}_{city}_{description.key}"
+        self._attr_name = description.name
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": f"Meteo România - {city.title()}",
@@ -302,7 +294,6 @@ class AnmSensor(CoordinatorEntity[AnmStareaVremiiCoordinator], SensorEntity):
 class OpenMeteoSensor(CoordinatorEntity[OpenMeteoCoordinator], SensorEntity):
     """Representation of an OpenMeteo sensor."""
 
-    _attr_has_entity_name = True
     entity_description: OpenMeteoSensorEntityDescription
 
     def __init__(
@@ -316,6 +307,7 @@ class OpenMeteoSensor(CoordinatorEntity[OpenMeteoCoordinator], SensorEntity):
         self.entity_description = description
         self._location_name = location_name
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_name = description.name
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": f"Meteo România - {location_name}",

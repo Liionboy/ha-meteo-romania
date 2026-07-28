@@ -39,7 +39,7 @@ class MeteoRomaniaBinarySensorEntityDescription(BinarySensorEntityDescription):
 BINARY_SENSOR_TYPES: tuple[MeteoRomaniaBinarySensorEntityDescription, ...] = (
     MeteoRomaniaBinarySensorEntityDescription(
         key="avertizare_generale",
-        translation_key="avertizare_generale",
+        name="Avertizare Meteo",
         icon="mdi:alert-circle",
         device_class=BinarySensorDeviceClass.SAFETY,
         value_fn=lambda data: data.get("generale", _DEFAULT_AVERTIZARE).active,
@@ -47,7 +47,7 @@ BINARY_SENSOR_TYPES: tuple[MeteoRomaniaBinarySensorEntityDescription, ...] = (
     ),
     MeteoRomaniaBinarySensorEntityDescription(
         key="avertizari_nowcasting",
-        translation_key="avertizari_nowcasting",
+        name="Avertizare Nowcasting",
         icon="mdi:alert-circle",
         device_class=BinarySensorDeviceClass.SAFETY,
         value_fn=lambda data: data.get("nowcasting", _DEFAULT_AVERTIZARE).active,
@@ -110,7 +110,6 @@ class MeteoRomaniaBinarySensor(
 ):
     """Representation of a Meteo Romania binary sensor."""
 
-    _attr_has_entity_name = True
     entity_description: MeteoRomaniaBinarySensorEntityDescription
 
     def __init__(
@@ -125,6 +124,7 @@ class MeteoRomaniaBinarySensor(
         self.entity_description = description
         self._location = location
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_name = description.name
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": f"Meteo România - {location.title()}",
