@@ -17,8 +17,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import AvertizareData
-from .const import CONF_CITY, DOMAIN
-from .coordinator import MeteoRomaniaAvertizariCoordinator
+from .const import CONF_CITY, DOMAIN, MODE_ANM_STATION
+from .coordinator import AnmAvertizariCoordinator
+
+_DEFAULT_AVERTIZARE = AvertizareData(
+    active=False, message_type=None, message_type_name=None,
+    color=None, color_name=None, phenomena=None, interval=None,
+    affected_zone=None, message_html=None, message_text=None,
+    issued_at=None, expires_at=None, affected_counties=None,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -35,12 +42,7 @@ BINARY_SENSOR_TYPES: tuple[MeteoRomaniaBinarySensorEntityDescription, ...] = (
         translation_key="avertizare_generale",
         icon="mdi:alert-circle",
         device_class=BinarySensorDeviceClass.SAFETY,
-        value_fn=lambda data: data.get("generale", AvertizareData(
-            active=False, message_type=None, message_type_name=None,
-            color=None, color_name=None, phenomena=None, interval=None,
-            affected_zone=None, message_html=None, message_text=None,
-            issued_at=None, expires_at=None, affected_counties=None,
-        )).active,
+        value_fn=lambda data: data.get("generale", _DEFAULT_AVERTIZARE).active,
         attrs_fn=lambda data: _build_avertizare_attrs(data.get("generale")),
     ),
     MeteoRomaniaBinarySensorEntityDescription(
@@ -48,12 +50,7 @@ BINARY_SENSOR_TYPES: tuple[MeteoRomaniaBinarySensorEntityDescription, ...] = (
         translation_key="avertizari_nowcasting",
         icon="mdi:alert-circle",
         device_class=BinarySensorDeviceClass.SAFETY,
-        value_fn=lambda data: data.get("nowcasting", AvertizareData(
-            active=False, message_type=None, message_type_name=None,
-            color=None, color_name=None, phenomena=None, interval=None,
-            affected_zone=None, message_html=None, message_text=None,
-            issued_at=None, expires_at=None, affected_counties=None,
-        )).active,
+        value_fn=lambda data: data.get("nowcasting", _DEFAULT_AVERTIZARE).active,
         attrs_fn=lambda data: _build_avertizare_attrs(data.get("nowcasting")),
     ),
 )
@@ -92,18 +89,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up Meteo Romania binary sensors from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
-    coordinator: MeteoRomaniaAvertizariCoordinator = data["avertizari_coordinator"]
-    city: str = data["city"]
+    coordinator: AnmAvertizariCoordinator = data["avertizari_coordinator"]
+
+    mode = data.get("mode", MODE_ANM_STATION)
+    if mode == MODE_ANM_STATION:
+        location = data.get("city", "Romania")
+    else:
+        location = data.get("location_name", "Romania")
 
     entities = [
-        MeteoRomaniaBinarySensor(coordinator, description, city, entry)
+        MeteoRomaniaBinarySensor(coordinator, description, location, entry)
         for description in BINARY_SENSOR_TYPES
     ]
     async_add_entities(entities)
 
 
 class MeteoRomaniaBinarySensor(
-    CoordinatorEntity[MeteoRomaniaAvertizariCoordinator],
+    CoordinatorEntity[AnmAvertizariCoordinator],
     BinarySensorEntity,
 ):
     """Representation of a Meteo Romania binary sensor."""
@@ -113,19 +115,19 @@ class MeteoRomaniaBinarySensor(
 
     def __init__(
         self,
-        coordinator: MeteoRomaniaAvertizariCoordinator,
+        coordinator: AnmAvertizariCoordinator,
         description: MeteoRomaniaBinarySensorEntityDescription,
-        city: str,
+        location: str,
         entry: ConfigEntry,
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._city = city
+        self._location = location
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": f"Meteo România - {city.title()}",
+            "name": f"Meteo România - {location.title()}",
             "manufacturer": "Administrația Națională de Meteorologie",
             "model": "Stație Meteo",
             "entry_type": "service",
