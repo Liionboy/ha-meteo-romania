@@ -22,6 +22,7 @@ from .const import (
     OPENMETEO_BASE_URL,
     OPENMETEO_PARAMS_CURRENT,
     OPENMETEO_PARAMS_DAILY,
+    OPENMETEO_PARAMS_HOURLY,
     WMO_WEATHER_CODE_MAP,
 )
 
@@ -115,9 +116,19 @@ class OpenMeteoCurrentData:
     weather_code: int | None = None
     cloud_cover: int | None = None
     precipitation: float | None = None
+    rain: float | None = None
+    snowfall: float | None = None
+    snow_depth: float | None = None
     condition: str | None = None
     is_day: bool = True
     time: str | None = None
+    # Hourly-based params (extracted from first hourly reading)
+    uv_index: float | None = None
+    visibility: float | None = None
+    sunshine_duration: float | None = None  # seconds
+    shortwave_radiation: float | None = None  # W/m²
+    soil_temperature_0_to_7cm: float | None = None
+    soil_moisture_0_to_7cm: float | None = None
 
     @property
     def wind_direction_text(self) -> str | None:
@@ -388,6 +399,7 @@ class OpenMeteoApiClient:
         params = (
             f"latitude={latitude}&longitude={longitude}"
             f"&current={OPENMETEO_PARAMS_CURRENT}"
+            f"&hourly={OPENMETEO_PARAMS_HOURLY}"
             f"&daily={OPENMETEO_PARAMS_DAILY}"
             f"&timezone=auto&forecast_days=7"
         )
@@ -408,6 +420,23 @@ class OpenMeteoApiClient:
         is_day = bool(current_raw.get("is_day", 1))
         weather_code = current_raw.get("weather_code")
 
+        # Extract hourly-based params (first reading)
+        hourly_raw = data.get("hourly", {})
+        hourly_time = hourly_raw.get("time", [])
+        current_time = current_raw.get("time", "")
+        # Find matching hourly index (or use first)
+        h_idx = 0
+        for i, t in enumerate(hourly_time):
+            if current_time and current_time in t:
+                h_idx = i
+                break
+
+        def _hourly_val(key: str) -> float | None:
+            arr = hourly_raw.get(key, [])
+            if arr and h_idx < len(arr):
+                return arr[h_idx]
+            return None
+
         current = OpenMeteoCurrentData(
             temperature=current_raw.get("temperature_2m"),
             apparent_temperature=current_raw.get("apparent_temperature"),
@@ -419,9 +448,19 @@ class OpenMeteoApiClient:
             weather_code=weather_code,
             cloud_cover=current_raw.get("cloud_cover"),
             precipitation=current_raw.get("precipitation"),
+            rain=current_raw.get("rain"),
+            snowfall=current_raw.get("snowfall"),
+            snow_depth=current_raw.get("snow_depth"),
             condition=_wmo_to_condition(weather_code, is_day),
             is_day=is_day,
             time=current_raw.get("time"),
+            # Hourly-based params
+            uv_index=_hourly_val("uv_index"),
+            visibility=_hourly_val("visibility"),
+            sunshine_duration=_hourly_val("sunshine_duration"),
+            shortwave_radiation=_hourly_val("shortwave_radiation"),
+            soil_temperature_0_to_7cm=_hourly_val("soil_temperature_0_to_7cm"),
+            soil_moisture_0_to_7cm=_hourly_val("soil_moisture_0_to_7cm"),
         )
 
         # Parse daily forecast

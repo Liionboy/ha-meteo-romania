@@ -257,7 +257,16 @@ class OpenMeteoWeather(CoordinatorEntity[OpenMeteoCoordinator], WeatherEntity):
             attrs["cloud_cover"] = current.cloud_cover
             attrs["wind_gusts"] = current.wind_gusts
             attrs["precipitation"] = current.precipitation
+            attrs["rain"] = current.rain
+            attrs["snowfall"] = current.snowfall
+            attrs["snow_depth"] = current.snow_depth
             attrs["weather_code"] = current.weather_code
+            attrs["uv_index"] = current.uv_index
+            attrs["visibility"] = current.visibility
+            attrs["sunshine_duration"] = current.sunshine_duration
+            attrs["shortwave_radiation"] = current.shortwave_radiation
+            attrs["soil_temperature"] = current.soil_temperature_0_to_7cm
+            attrs["soil_moisture"] = current.soil_moisture_0_to_7cm
         return attrs
 
     def _build_forecast(self) -> list[Forecast]:

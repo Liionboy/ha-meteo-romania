@@ -21,12 +21,19 @@ OPENMETEO_BASE_URL = "https://api.open-meteo.com/v1/forecast"
 OPENMETEO_PARAMS_CURRENT = (
     "temperature_2m,relative_humidity_2m,apparent_temperature,"
     "wind_speed_10m,wind_direction_10m,wind_gusts_10m,"
-    "surface_pressure,weather_code,cloud_cover,precipitation,is_day"
+    "surface_pressure,weather_code,cloud_cover,precipitation,is_day,"
+    "rain,snowfall,snow_depth"
+)
+
+# Additional params available only on hourly endpoint
+OPENMETEO_PARAMS_HOURLY = (
+    "uv_index,visibility,sunshine_duration,shortwave_radiation,"
+    "soil_temperature_0_to_7cm,soil_moisture_0_to_7cm"
 )
 OPENMETEO_PARAMS_DAILY = (
     "weather_code,temperature_2m_max,temperature_2m_min,"
     "precipitation_sum,precipitation_probability_max,"
-    "wind_speed_10m_max,wind_gusts_10m_max"
+    "uv_index_max,wind_speed_10m_max,wind_gusts_10m_max"
 )
 
 # ========== Geocoding (Nominatim - free) ==========

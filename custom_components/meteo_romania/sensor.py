@@ -15,9 +15,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolumetricFlux,
+    UnitOfIrradiance,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -207,6 +210,79 @@ OPENMETEO_SENSOR_TYPES: tuple[OpenMeteoSensorEntityDescription, ...] = (
         name="Cod Meteo",
         icon="mdi:code-brackets",
         value_fn=lambda d: d.weather_code,
+    ),
+    # === Prioritate mare ===
+    OpenMeteoSensorEntityDescription(
+        key="uv_index",
+        name="Index UV",
+        icon="mdi:weather-sunny-alert",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: d.uv_index,
+    ),
+    OpenMeteoSensorEntityDescription(
+        key="vizibilitate",
+        name="Vizibilitate",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        icon="mdi:eye",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: d.visibility,
+    ),
+    OpenMeteoSensorEntityDescription(
+        key="temperatura_sol",
+        name="Temperatura Sol",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: d.soil_temperature_0_to_7cm,
+    ),
+    OpenMeteoSensorEntityDescription(
+        key="umiditate_sol",
+        name="Umiditate Sol",
+        native_unit_of_measurement="m³/m³",
+        icon="mdi:water-percent",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: d.soil_moisture_0_to_7cm,
+    ),
+    # === Prioritate medie ===
+    OpenMeteoSensorEntityDescription(
+        key="durata_soare",
+        name="Durată Soare",
+        native_unit_of_measurement="min",
+        icon="mdi:weather-sunny",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: round(d.sunshine_duration / 60, 1) if d.sunshine_duration is not None else None,
+    ),
+    OpenMeteoSensorEntityDescription(
+        key="ninsoare",
+        name="Ninsoare",
+        native_unit_of_measurement="cm",
+        icon="mdi:weather-snowy",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: d.snowfall,
+    ),
+    OpenMeteoSensorEntityDescription(
+        key="strat_zapada",
+        name="Strat Zăpadă",
+        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+        icon="mdi:weather-snowy-heavy",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: d.snow_depth,
+    ),
+    OpenMeteoSensorEntityDescription(
+        key="radiatie_scurta",
+        name="Radiație Solară",
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+        icon="mdi:solar-power",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: d.shortwave_radiation,
+    ),
+    OpenMeteoSensorEntityDescription(
+        key="ploaie",
+        name="Ploaie",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        icon="mdi:weather-rainy",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: d.rain,
     ),
 )
 
