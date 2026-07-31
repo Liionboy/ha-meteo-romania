@@ -332,6 +332,26 @@ class AnmApiClient:
             return self._empty_avertizare()
         return self._parse_avertizare(data)
 
+    @staticmethod
+    def _pick_most_severe(avertizari: list[dict]) -> dict:
+        """Pick the most severe avertizare from a list.
+
+        Severity order: rosu (3) > portocaliu (2) > galben (1) > other (0)
+        """
+        severity_map = {"rosu": 3, "portocaliu": 2, "galben": 1}
+        best = avertizari[0]
+        best_score = severity_map.get(
+            best.get("@attributes", {}).get("culoare", ""), 0
+        )
+        for av in avertizari[1:]:
+            score = severity_map.get(
+                av.get("@attributes", {}).get("culoare", ""), 0
+            )
+            if score > best_score:
+                best = av
+                best_score = score
+        return best
+
     def _parse_avertizare(self, data: Any) -> AvertizareData:
         """Parse avertizare data from API response."""
         if not data:
@@ -340,6 +360,13 @@ class AnmApiClient:
         avertizare = data.get("avertizare")
         if not avertizare:
             return self._empty_avertizare()
+
+        # ANM API returns a dict when there's one warning,
+        # but a list when there are multiple.
+        if isinstance(avertizare, list):
+            if not avertizare:
+                return self._empty_avertizare()
+            avertizare = self._pick_most_severe(avertizare)
 
         attrs = avertizare.get("@attributes", {})
         mesaj_html = attrs.get("mesaj")
