@@ -323,6 +323,8 @@ class AnmApiClient:
     async def get_avertizari_generale(self) -> AvertizareData:
         """Fetch current general weather warnings."""
         data = await self._fetch_json(API_AVERTIZARI_GENERALE)
+        if isinstance(data, str):
+            return self._empty_avertizare()
         return self._parse_avertizare(data)
 
     async def get_avertizari_nowcasting(self) -> AvertizareData:
@@ -359,6 +361,10 @@ class AnmApiClient:
 
         avertizare = data.get("avertizare")
         if not avertizare:
+            return self._empty_avertizare()
+
+        # ANM API may return a string (e.g. error message) instead of dict/list
+        if isinstance(avertizare, str):
             return self._empty_avertizare()
 
         # ANM API returns a dict when there's one warning,
