@@ -207,6 +207,65 @@ def _wmo_to_condition(code: int | None, is_day: bool = True) -> str:
 
 
 # =====================================================================
+# HTTP helper with retry + exponential backoff
+# =====================================================================
+
+MAX_RETRIES = 3
+RETRY_BASE_DELAY = 2  # seconds
+RETRYABLE_STATUS_CODES = frozenset({429, 500, 502, 503, 504})
+
+
+async def _request_json_with_retry(
+    session: aiohttp.ClientSession,
+    url: str,
+    *,
+    source: str,
+    timeout_total: int = 30,
+    headers: dict[str, str] | None = None,
+) -> Any:
+    """GET a JSON URL with retry and exponential backoff.
+
+    Retries on transient failures: 429/5xx responses, client errors and
+    timeouts. Returns the parsed JSON on success, or None on final failure.
+    Backoff: 2s, 4s (max 3 attempts).
+    """
+    last_err: Exception | None = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            async with session.get(
+                url,
+                timeout=aiohttp.ClientTimeout(total=timeout_total),
+                headers=headers,
+            ) as resp:
+                if resp.status == 200:
+                    return await resp.json()
+                if resp.status in RETRYABLE_STATUS_CODES and attempt < MAX_RETRIES:
+                    delay = RETRY_BASE_DELAY * (2 ** (attempt - 1))
+                    LOGGER.warning(
+                        "%s API %s for %s (attempt %s/%s), retrying in %ss",
+                        source, resp.status, url, attempt, MAX_RETRIES, delay,
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                LOGGER.error("%s API error %s for %s", source, resp.status, url)
+                return None
+        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
+            last_err = err
+            if attempt < MAX_RETRIES:
+                delay = RETRY_BASE_DELAY * (2 ** (attempt - 1))
+                LOGGER.warning(
+                    "%s API request failed (%s), retrying in %ss (attempt %s/%s)",
+                    source, err, delay, attempt, MAX_RETRIES,
+                )
+                await asyncio.sleep(delay)
+                continue
+    LOGGER.error(
+        "%s API request failed after %s attempts: %s", source, MAX_RETRIES, last_err
+    )
+    return None
+
+
+# =====================================================================
 # ANM API Client
 # =====================================================================
 
@@ -217,16 +276,10 @@ class AnmApiClient:
         self._session = session
 
     async def _fetch_json(self, url: str) -> Any:
-        """Fetch JSON from URL."""
-        try:
-            async with self._session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
-                if resp.status != 200:
-                    LOGGER.error("ANM API error %s for %s", resp.status, url)
-                    return None
-                return await resp.json()
-        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            LOGGER.error("ANM API request failed: %s", err)
-            return None
+        """Fetch JSON from URL with retry and exponential backoff."""
+        return await _request_json_with_retry(
+            self._session, url, source="ANM", timeout_total=30
+        )
 
     async def get_starea_vremii(self) -> dict[str, MeteoStationData]:
         """Fetch current weather for all ANM stations."""
@@ -438,14 +491,10 @@ class OpenMeteoApiClient:
         )
         url = f"{OPENMETEO_BASE_URL}?{params}"
 
-        try:
-            async with self._session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
-                if resp.status != 200:
-                    LOGGER.error("OpenMeteo API error %s", resp.status)
-                    return None, None
-                data = await resp.json()
-        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            LOGGER.error("OpenMeteo API request failed: %s", err)
+        data = await _request_json_with_retry(
+            self._session, url, source="OpenMeteo", timeout_total=30
+        )
+        if data is None:
             return None, None
 
         # Parse current
